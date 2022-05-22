@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:developer';
 import 'dart:convert';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,7 +9,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
 
 import 'bloc/call_bloc.dart';
-import 'firebase_options.dart';
 import 'notification/notification_widget.dart';
 import 'notification/notification_manager.dart';
 import 'notification/notification_ring.dart';
@@ -31,15 +29,14 @@ String targetID = '';
 RemoteMessage? backendMessage;
 
 Future<void> main() async {
-
   // need ensureInitialized
   WidgetsFlutterBinding.ensureInitialized();
 
   // need init Notification
+
   await NotificationManager.shared.init();
 
   ZegoExpressManager.shared.createEngine(appID);
-
   runApp(const MyApp());
 }
 
@@ -199,9 +196,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void requestFCMToken() async {
-    setState(() => firebaseTips = 'initializing firebase...');
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
     setState(() => firebaseTips = 'Getting fcm token...');
     var fcmToken = await FirebaseMessaging.instance.getToken();
 
@@ -309,16 +303,16 @@ class CallPage extends StatefulWidget {
 }
 
 class _CallPageState extends State<CallPage> {
-  Widget? _localView = Container(color: Colors.white);
-  final GlobalKey _localViewKey = GlobalKey();
+  Widget? localView = Container(color: Colors.white);
+  final GlobalKey localViewKey = GlobalKey();
 
-  Widget _remoteView = Container(color: Colors.black54);
-  final GlobalKey _remoteViewKey = GlobalKey();
+  Widget remoteView = Container(color: Colors.black54);
+  final GlobalKey remoteViewKey = GlobalKey();
 
   bool needLoadUserView = true;
 
-  bool _micEnable = true;
-  bool _cameraEnable = true;
+  bool micEnable = true;
+  bool cameraEnable = true;
 
   String roomState = 'None';
   int roomErrorCode = 0;
@@ -368,16 +362,16 @@ class _CallPageState extends State<CallPage> {
       body: Center(
         child: Stack(
           children: <Widget>[
-            SizedBox.expand(key: _localViewKey, child: _localView),
+            SizedBox.expand(key: localViewKey, child: localView),
             Positioned(
                 top: 100,
                 right: 16,
                 child: SizedBox(
-                  key: _remoteViewKey,
+                  key: remoteViewKey,
                   // default use 9:16
                   width: 108,
                   height: 192,
-                  child: _remoteView,
+                  child: remoteView,
                 )),
             Positioned(
                 bottom: 100,
@@ -394,13 +388,13 @@ class _CallPageState extends State<CallPage> {
                         primary: Colors.black26,
                       ),
                       child: Icon(
-                        _micEnable ? Icons.mic : Icons.mic_off,
+                        micEnable ? Icons.mic : Icons.mic_off,
                         size: 28,
                       ),
                       onPressed: () {
-                        ZegoExpressManager.shared.enableMic(!_micEnable);
+                        ZegoExpressManager.shared.enableMic(!micEnable);
                         setState(() {
-                          _micEnable = !_micEnable;
+                          micEnable = !micEnable;
                         });
                       },
                     ),
@@ -418,8 +412,8 @@ class _CallPageState extends State<CallPage> {
                       onPressed: () {
                         ZegoExpressManager.shared.leaveRoom();
                         setState(() {
-                          _localView = Container(color: Colors.white);
-                          _remoteView = Container(color: Colors.black54);
+                          localView = Container(color: Colors.white);
+                          remoteView = Container(color: Colors.black54);
                         });
                         // Back to home page
                         Navigator.pushReplacementNamed(context, '/home_page');
@@ -433,15 +427,15 @@ class _CallPageState extends State<CallPage> {
                         primary: Colors.black26,
                       ),
                       child: Icon(
-                        _cameraEnable
+                        cameraEnable
                             ? Icons.camera_alt
                             : Icons.camera_alt_outlined,
                         size: 28,
                       ),
                       onPressed: () {
-                        ZegoExpressManager.shared.enableCamera(!_cameraEnable);
+                        ZegoExpressManager.shared.enableCamera(!cameraEnable);
                         setState(() {
-                          _cameraEnable = !_cameraEnable;
+                          cameraEnable = !cameraEnable;
                         });
                       },
                     ),
@@ -470,7 +464,7 @@ class _CallPageState extends State<CallPage> {
     double devicePixelRatio =
         WidgetsFlutterBinding.ensureInitialized().window.devicePixelRatio;
     RenderBox? localViewRenderBox =
-        _localViewKey.currentContext?.findRenderObject() as RenderBox;
+        localViewKey.currentContext?.findRenderObject() as RenderBox;
 
     final localViewSize = localViewRenderBox.size * devicePixelRatio;
 
@@ -480,12 +474,12 @@ class _CallPageState extends State<CallPage> {
             (localViewSize.width).floor(), (localViewSize.height).floor())
         .then((texture) {
       setState(() {
-        _localView = texture!;
+        localView = texture!;
       });
     });
 
     RenderBox? remoteViewRenderBox =
-        _localViewKey.currentContext?.findRenderObject() as RenderBox;
+        localViewKey.currentContext?.findRenderObject() as RenderBox;
     final remoteViewSize = remoteViewRenderBox.size * devicePixelRatio;
     ZegoExpressManager.shared.onRoomUserUpdate =
         (ZegoUpdateType updateType, List<String> userIDList, String roomID) {
@@ -496,13 +490,13 @@ class _CallPageState extends State<CallPage> {
                   (remoteViewSize.height).floor())
               .then((texture) {
             setState(() {
-              _remoteView = texture!;
+              remoteView = texture!;
             });
           });
         }
       } else {
         setState(() {
-          _remoteView = Container(color: Colors.black54);
+          remoteView = Container(color: Colors.black54);
         });
       }
     };
